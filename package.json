@@ -1,5 +1,5 @@
 {
-  "name": "react-native-call-detection",
+  "name": "react-native-call-detection-ls",
   "version": "1.8.3",
   "description": "Get different phone call states for iOS and Android along with incoming phone number(just for android)",
   "main": "index.js",
@@ -15,7 +15,7 @@
     "iOS",
     "android"
   ],
-  "author": "Pritesh Nandgaonkar <prit.nandgaonkar@gmail.com> (https://github.com/priteshrnandgaonkar)",
+  "author": "Pritesh Nandgaonkar and Sarmad Ali",
   "license": "MIT",
   "peerDependencies": {
     "react-native": ">=0.26.0"
