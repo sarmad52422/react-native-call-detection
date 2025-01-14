@@ -116,7 +116,6 @@ public class CallDetectionManagerModule
         this.reactContext
                 .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
                 .emit("PhoneCallStateUpdate", phoneNumber + "|" + eventName);
-        Log.e("EVENT_TP", "EVENT_TP" + "----" + eventName + "-----" + phoneNumber);
     }
 
     @Override
