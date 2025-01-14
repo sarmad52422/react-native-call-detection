@@ -11,6 +11,7 @@ import android.util.Log;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,6 +25,8 @@ public class CallDetectionManagerModule
     private boolean wasAppInRinging = false;
     private ReactApplicationContext reactContext;
     private TelephonyManager telephonyManager;
+    String eventType = null;
+
     private CallStateUpdateActionModule jsModule = null;
     private CallDetectionPhoneStateListener callDetectionPhoneStateListener;
     private Activity activity = null;
@@ -64,8 +67,7 @@ public class CallDetectionManagerModule
     /**
      * @return a map of constants this module exports to JS. Supports JSON types.
      */
-    public
-    Map<String, Object> getConstants() {
+    public Map<String, Object> getConstants() {
         Map<String, Object> map = new HashMap<String, Object>();
         map.put("Incoming", "Incoming");
         map.put("Offhook", "Offhook");
@@ -110,35 +112,40 @@ public class CallDetectionManagerModule
 
     }
 
+    private void sendEvent(String eventName, String phoneNumber) {
+        this.reactContext
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                .emit("PhoneCallStateUpdate", phoneNumber + "|" + eventName);
+        Log.e("EVENT_TP", "EVENT_TP" + "----" + eventName + "-----" + phoneNumber);
+    }
+
     @Override
     public void phoneCallStateUpdated(int state, String phoneNumber) {
-        jsModule = this.reactContext.getJSModule(CallStateUpdateActionModule.class);
-
         switch (state) {
-            //Hangup
             case TelephonyManager.CALL_STATE_IDLE:
-                if(wasAppInOffHook == true) { // if there was an ongoing call and the call state switches to idle, the call must have gotten disconnected
-                    jsModule.callStateUpdated("Disconnected", phoneNumber);
-                } else if(wasAppInRinging == true) { // if the phone was ringing but there was no actual ongoing call, it must have gotten missed
-                    jsModule.callStateUpdated("Missed", phoneNumber);
+                if (wasAppInOffHook) {
+                    eventType = "Disconnected";
+                } else if (wasAppInRinging) {
+                    eventType = "Missed";
                 }
-
-                //reset device state
                 wasAppInRinging = false;
                 wasAppInOffHook = false;
                 break;
-            //Outgoing
+
             case TelephonyManager.CALL_STATE_OFFHOOK:
-                //Device call state: Off-hook. At least one call exists that is dialing, active, or on hold, and no calls are ringing or waiting.
                 wasAppInOffHook = true;
-                jsModule.callStateUpdated("Offhook", phoneNumber);
+                eventType = "Offhook";
                 break;
-            //Incoming
+
             case TelephonyManager.CALL_STATE_RINGING:
-                // Device call state: Ringing. A new call arrived and is ringing or waiting. In the latter case, another call is already active.
                 wasAppInRinging = true;
-                jsModule.callStateUpdated("Incoming", phoneNumber);
+                eventType = "Incoming";
                 break;
         }
+
+        if (eventType != null) {
+            sendEvent(eventType, phoneNumber);
+        }
     }
+
 }
